@@ -7,7 +7,7 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold mb-2">
                     <a href="{{ route('news.show', $news->id) }}" class="text-blue-600 hover:underline">
-                        {{ $news->title }}
+                        {{ $news->judul }}
                     </a>
                 </h2>
                 <p class="text-gray-600 mb-4">Oleh: {{ $news->wartawan->nama }} | Dipublikasikan pada: {{ $news->created_at->format('d M Y') }}</p>
