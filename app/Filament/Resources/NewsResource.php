@@ -12,6 +12,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\NewsResource\Pages;
@@ -39,6 +41,9 @@ class NewsResource extends Resource
                             ->label('Judul Berita')
                             ->required()
                             ->maxLength(255),
+                        FileUpload::make('thumbnail')
+                            ->disk('public')
+                            ->image(),
                         TextInput::make('ringkasan')
                             ->label('Ringkasan')
                             ->required()
@@ -46,6 +51,10 @@ class NewsResource extends Resource
                         RichEditor::make('isi')
                             ->label('Isi Berita')
                             ->required(),
+                        FileUpload::make('dokumen')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk('public')
+                            ->maxSize(1024)
                     ]),
             ]);
     }
@@ -54,10 +63,12 @@ class NewsResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('thumbnail')->label('Thumbnail')->square()->disk('public'),
                 TextColumn::make('wartawan.nama')->label('Nama Wartawan')->searchable()->sortable(),
                 TextColumn::make('judul')->label('Judul Berita')->searchable()->sortable(),
                 TextColumn::make('ringkasan')->label('Ringkasan')->limit(50)->sortable(),
                 TextColumn::make('isi')->label('Isi Berita')->limit(50)->sortable(),
+                TextColumn::make('dokumen')->label('Dokumen')->url(fn($record) => $record->dokumen ? asset('storage/' . $record->dokumen) : null)->openUrlInNewTab(),
             ])
             ->filters([
                 //

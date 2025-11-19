@@ -8,6 +8,10 @@
             {{-- pake {!! !!} agar tag html tidak terender --}}
             {!! $news->isi !!}
         </div>
+        <a href="{{ asset('storage/' . $news->dokumen) }}" target="_blank" class="text-blue-600 hover:underline">
+            Dokumen
+            Pendukung Berita
+        </a>
     </article>
     <a href="{{ route('news.index') }}" class="text-blue-600 hover:underline">← Kembali ke Daftar Berita</a>
 @endsection

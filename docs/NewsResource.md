@@ -18,8 +18,11 @@
 
 ### Fitur Utama:
 - ✅ Form input berita dengan Rich Text Editor
+- ✅ Upload thumbnail gambar untuk berita
+- ✅ Upload dokumen PDF pendukung
 - ✅ Relasi dengan model Wartawan
 - ✅ Tabel data dengan sorting dan searching
+- ✅ Preview thumbnail di tabel
 - ✅ Actions untuk Edit dan Delete
 - ✅ Bulk delete untuk menghapus multiple records
 - ✅ Validasi input otomatis
@@ -82,11 +85,17 @@ public static function form(Form $form): Form
                 // Field 2: Input Judul
                 TextInput::make('judul'),
                 
-                // Field 3: Input Ringkasan
+                // Field 3: Upload Thumbnail Image
+                FileUpload::make('thumbnail'),
+                
+                // Field 4: Input Ringkasan
                 TextInput::make('ringkasan'),
                 
-                // Field 4: Rich Text Editor untuk Isi
+                // Field 5: Rich Text Editor untuk Isi
                 RichEditor::make('isi'),
+                
+                // Field 6: Upload Dokumen PDF
+                FileUpload::make('dokumen'),
             ]),
     ]);
 }
@@ -168,6 +177,40 @@ Judul Berita *
 └──────────────────────────────┘
 ```
 
+#### 3. FileUpload - Thumbnail Image
+
+```php
+FileUpload::make('thumbnail')
+    ->disk('public')
+    ->image()
+```
+
+**Penjelasan:**
+- `make('thumbnail')` → Field untuk upload thumbnail berita
+- `->disk('public')` → Menyimpan file di `storage/app/public`
+- `->image()` → Hanya menerima file gambar (jpg, png, gif, webp, svg)
+
+**Validasi:**
+- ✅ Hanya menerima file gambar
+- ✅ File disimpan di storage/app/public/thumbnail
+- ✅ Field ini optional (tidak wajib diisi)
+
+**Output Visual:**
+```
+Thumbnail
+┌──────────────────────────────┐
+│  [📁 Upload Image]           │
+│  atau drag & drop disini     │
+└──────────────────────────────┘
+Supported: JPG, PNG, GIF, WebP, SVG
+```
+
+**Fitur Upload:**
+- **Drag & Drop** - Seret file langsung ke area upload
+- **Click to Browse** - Klik untuk pilih file dari komputer
+- **Preview** - Lihat preview gambar setelah upload
+- **Remove** - Hapus gambar yang sudah diupload
+
 #### 4. TextInput - Ringkasan
 
 ```php
@@ -222,6 +265,50 @@ Isi Berita *
 **Validasi:**
 - ✅ Tidak boleh kosong
 
+#### 6. FileUpload - Dokumen PDF
+
+```php
+FileUpload::make('dokumen')
+    ->acceptedFileTypes(['application/pdf'])
+    ->disk('public')
+    ->maxSize(1024)
+```
+
+**Penjelasan:**
+- `make('dokumen')` → Field untuk upload dokumen pendukung
+- `->acceptedFileTypes(['application/pdf'])` → Hanya menerima file PDF
+- `->disk('public')` → Menyimpan file di `storage/app/public`
+- `->maxSize(1024)` → Maksimal ukuran file 1024 KB (1 MB)
+
+**Validasi:**
+- ✅ Hanya menerima file PDF
+- ✅ Maksimal ukuran 1 MB
+- ✅ File disimpan di storage/app/public/dokumen
+- ✅ Field ini optional (tidak wajib diisi)
+
+**Output Visual:**
+```
+Dokumen
+┌──────────────────────────────┐
+│  [📄 Upload PDF]             │
+│  atau drag & drop disini     │
+└──────────────────────────────┘
+Supported: PDF only. Max: 1 MB
+```
+
+**Use Case:**
+- Upload press release dalam bentuk PDF
+- Upload sumber berita resmi
+- Upload dokumen pendukung untuk verifikasi berita
+- Upload infografis atau data dalam PDF
+
+**Fitur Upload:**
+- **Drag & Drop** - Seret file PDF langsung
+- **Click to Browse** - Klik untuk pilih file
+- **File Info** - Lihat nama dan ukuran file
+- **Download** - Download file yang sudah diupload
+- **Remove** - Hapus file yang sudah diupload
+
 ## 📊 Table Configuration
 
 Table configuration mendefinisikan bagaimana data berita ditampilkan dalam bentuk tabel.
@@ -241,14 +328,45 @@ public static function table(Table $table): Table
 
 ```php
 ->columns([
+    ImageColumn::make('thumbnail'),
     TextColumn::make('wartawan.nama'),
     TextColumn::make('judul'),
     TextColumn::make('ringkasan'),
     TextColumn::make('isi'),
+    TextColumn::make('dokumen'),
 ])
 ```
 
-#### 1. Kolom Wartawan
+#### 1. Kolom Thumbnail
+
+```php
+ImageColumn::make('thumbnail')
+    ->label('Thumbnail')
+    ->square()
+    ->disk('public')
+```
+
+**Penjelasan:**
+- `ImageColumn` → Kolom khusus untuk menampilkan gambar
+- `->square()` → Menampilkan gambar dalam bentuk kotak (aspect ratio 1:1)
+- `->disk('public')` → Mengambil gambar dari storage public
+
+**Contoh Output:**
+```
+Thumbnail
+─────────────────
+[🖼️ 100x100px]
+[🖼️ 100x100px]
+[🖼️ 100x100px]
+```
+
+**Fitur:**
+- Preview gambar langsung di tabel
+- Click untuk melihat gambar ukuran penuh
+- Jika tidak ada gambar, tampil placeholder
+- Lazy loading untuk performa optimal
+
+#### 2. Kolom Wartawan
 
 ```php
 TextColumn::make('wartawan.nama')
@@ -271,7 +389,7 @@ Siti Nurhaliza
 Budi Santoso
 ```
 
-#### 2. Kolom Judul
+#### 3. Kolom Judul
 
 ```php
 TextColumn::make('judul')
@@ -284,7 +402,7 @@ TextColumn::make('judul')
 - Menampilkan judul berita
 - Bisa di-search dan di-sort
 
-#### 3. Kolom Ringkasan
+#### 4. Kolom Ringkasan
 
 ```php
 TextColumn::make('ringkasan')
@@ -305,7 +423,7 @@ Ini adalah ringkasan berita yang panjang...
 Berita terbaru tentang ekonomi Indonesia...
 ```
 
-#### 4. Kolom Isi
+#### 5. Kolom Isi
 
 ```php
 TextColumn::make('isi')
@@ -318,16 +436,45 @@ TextColumn::make('isi')
 - Sama seperti ringkasan, dipotong 50 karakter
 - Memberikan preview isi berita
 
+#### 6. Kolom Dokumen
+
+```php
+TextColumn::make('dokumen')
+    ->label('Dokumen')
+    ->url(fn($record) => $record->dokumen ? asset('storage/' . $record->dokumen) : null)
+    ->openUrlInNewTab()
+```
+
+**Penjelasan:**
+- `->url()` → Membuat kolom menjadi link yang bisa diklik
+- `fn($record)` → Closure untuk generate URL dari path file
+- `asset('storage/' . $record->dokumen)` → Generate URL ke file di storage public
+- `->openUrlInNewTab()` → Membuka link di tab baru
+
+**Contoh Output:**
+```
+Dokumen
+─────────────────────────
+📄 dokumen-berita.pdf
+📄 press-release.pdf
+- (kosong jika tidak ada)
+```
+
+**Behavior:**
+- Jika ada dokumen → Tampil sebagai link yang bisa diklik
+- Click → Download/buka PDF di tab baru
+- Jika tidak ada → Tampil kosong/placeholder
+
 ### Table Layout Example
 
 ```
-┌─────────────────┬──────────────────────┬─────────────────────┬─────────────────────┬─────────┐
-│ Nama Wartawan   │ Judul Berita         │ Ringkasan           │ Isi Berita          │ Actions │
-├─────────────────┼──────────────────────┼─────────────────────┼─────────────────────┼─────────┤
-│ Ahmad Fauzi     │ Ekonomi Meningkat    │ Pertumbuhan ekono...│ Jakarta - Ekonomi...│ ✏️  🗑️  │
-│ Siti Nurhaliza  │ Teknologi AI         │ Perkembangan AI d...│ Teknologi kecerda...│ ✏️  🗑️  │
-│ Budi Santoso    │ Olahraga Nasional    │ Tim nasional meng...│ Timnas Indonesia ...│ ✏️  🗑️  │
-└─────────────────┴──────────────────────┴─────────────────────┴─────────────────────┴─────────┘
+┌───────────┬─────────────┬──────────────────┬──────────────┬──────────────┬────────────┬─────────┐
+│ Thumbnail │ Wartawan    │ Judul Berita     │ Ringkasan    │ Isi Berita   │ Dokumen    │ Actions │
+├───────────┼─────────────┼──────────────────┼──────────────┼──────────────┼────────────┼─────────┤
+│ [🖼️]      │ Ahmad Fauzi │ Ekonomi Meningkat│ Pertumbuhan..│ Jakarta - ...│ 📄 pdf     │ ✏️  🗑️  │
+│ [🖼️]      │ Siti N.     │ Teknologi AI     │ Perkembangan.│ Teknologi ...│ 📄 pdf     │ ✏️  🗑️  │
+│ [🖼️]      │ Budi S.     │ Olahraga Nas.    │ Tim nasional.│ Timnas Ind...│ -          │ ✏️  🗑️  │
+└───────────┴─────────────┴──────────────────┴──────────────┴──────────────┴────────────┴─────────┘
 ```
 
 ## 🔧 Actions & Bulk Actions
@@ -541,15 +688,20 @@ Di sidebar kiri, klik menu **📰 News**
 2. Form akan terbuka dengan field:
    - **Wartawan** → Pilih wartawan dari dropdown
    - **Judul Berita** → Ketik judul
+   - **Thumbnail** → Upload gambar thumbnail (optional)
    - **Ringkasan** → Ketik ringkasan singkat
    - **Isi Berita** → Ketik isi lengkap dengan rich editor
+   - **Dokumen** → Upload PDF pendukung (optional)
 3. Klik **"Create"** untuk menyimpan
 4. Atau klik **"Create & Create Another"** untuk langsung buat berita lagi
 
 **Validasi:**
-- Semua field wajib diisi
+- Field wajib: Wartawan, Judul, Ringkasan, Isi Berita
+- Field optional: Thumbnail, Dokumen
 - Judul dan ringkasan max 255 karakter
 - Wartawan harus dipilih dari dropdown
+- Thumbnail hanya menerima file gambar (JPG, PNG, GIF, WebP, SVG)
+- Dokumen hanya menerima file PDF dengan maksimal 1 MB
 
 ### 4. Mengedit Berita
 
@@ -573,7 +725,25 @@ Di sidebar kiri, klik menu **📰 News**
 3. Konfirmasi
 4. Semua berita terpilih akan terhapus
 
-### 6. Mencari Berita
+### 6. Upload dan Manage Files
+
+**Upload Thumbnail:**
+1. Di form create/edit, klik area "Thumbnail"
+2. Pilih gambar dari komputer atau drag & drop
+3. Preview akan muncul setelah upload
+4. Untuk mengganti, klik X dan upload ulang
+
+**Upload Dokumen PDF:**
+1. Di form, klik area "Dokumen"
+2. Pilih file PDF dari komputer
+3. Maksimal ukuran 1 MB
+4. Nama file akan ditampilkan setelah upload
+
+**Melihat File di Table:**
+- **Thumbnail**: Preview langsung di kolom thumbnail
+- **Dokumen**: Klik link PDF untuk download/buka di tab baru
+
+### 7. Mencari Berita
 
 Gunakan search bar untuk mencari berdasarkan:
 - Nama wartawan
@@ -585,7 +755,7 @@ Search: [ekonomi______] 🔍
 
 Hasil akan difilter secara real-time.
 
-### 7. Sorting Data
+### 8. Sorting Data
 
 Klik header kolom untuk sorting:
 - Klik 1x → Ascending (A-Z, 0-9)
@@ -629,6 +799,11 @@ Section::make('Detail Berita')
             ->preload()
             ->required(),
         
+        TextInput::make('judul')
+            ->label('Judul Berita')
+            ->required()
+            ->maxLength(255),
+        
         // Field baru: Kategori
         Select::make('kategori')
             ->label('Kategori')
@@ -640,10 +815,10 @@ Section::make('Detail Berita')
             ])
             ->required(),
         
-        TextInput::make('judul')
-            ->label('Judul Berita')
-            ->required()
-            ->maxLength(255),
+        FileUpload::make('thumbnail')
+            ->disk('public')
+            ->image(),
+        
         // ... field lainnya
     ]),
 ```
@@ -667,6 +842,11 @@ Contoh filter berdasarkan wartawan:
     TextColumn::make('id')
         ->label('ID')
         ->sortable(),
+    
+    ImageColumn::make('thumbnail')
+        ->label('Thumbnail')
+        ->square()
+        ->disk('public'),
     
     TextColumn::make('wartawan.nama')
         ->label('Nama Wartawan')
@@ -714,13 +894,20 @@ protected function getSavedNotificationTitle(): ?string
 NewsResource
     │
     ├── Model: News.php
-    │   └── Relasi: belongsTo(Wartawan)
+    │   ├── Relasi: belongsTo(Wartawan)
+    │   └── Fields: thumbnail, dokumen
     │
     ├── Migration: 2025_11_05_021159_create_news_table.php
+    │   ├── Column: thumbnail (string, nullable)
+    │   └── Column: dokumen (string, nullable)
     │
     ├── Factory: NewsFactory.php
     │
     ├── Controller: NewsController.php (untuk frontend)
+    │
+    ├── Storage: storage/app/public/
+    │   ├── thumbnail/ (gambar berita)
+    │   └── dokumen/ (file PDF)
     │
     └── Views: resources/views/news/
         ├── index.blade.php
